@@ -1,6 +1,7 @@
 
 from noaa_sdk import noaa  # https://github.com/paulokuong/noaa
 from datetime import datetime
+from preconditions import preconditions
 
 
 def to_datetime(timestamp):
@@ -17,11 +18,15 @@ class Observations:
         self.country_code = country_code
         self.start = start
         self.end = end
-        self.observations = [x for x in noaa.NOAA().get_observations(postal_code, country_code, start=start)]
+        self.observations = [x for x in noaa.NOAA().get_observations(postal_code, country_code, start=start, end=end)]
         self.temperatures = None
+        self.max_temperature_last_24_hours = None
+        self.values = {}
 
-    def get_temperatures(self):
-        if self.temperatures is None:
-            self.temperatures = {'timestamps': [to_datetime(x['timestamp']) for x in self.observations if x['temperature']['value'] is not None],
-                                 'temperatures': [to_fahrenheit(x['temperature']['value']) for x in self.observations if x['temperature']['value'] is not None]}
-        return self.temperatures
+    @preconditions(lambda value_key: value_key in ['windSpeed', 'temperature', 'precipitationLast6Hours', 'relativeHumidity', 'windDirection', 'seaLevelPressure', 'precipitationLastHour', 'dewpoint', 'windGust', 'maxTemperatureLast24Hours', 'windChill', 'barometricPressure', 'elevation', 'precipitationLast3Hours', 'visibility', 'heatIndex'])
+    def get_values_by_key(self, value_key):
+        if value_key not in self.values:
+            timestamps = [to_datetime(x['timestamp']) for x in self.observations if x[value_key]['value'] is not None]
+            values = [x[value_key]['value'] for x in self.observations if x[value_key]['value'] is not None]
+            self.values[value_key] = {'timestamps': timestamps, 'values': values}
+        return self.values[value_key]
