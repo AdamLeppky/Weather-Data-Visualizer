@@ -28,5 +28,5 @@ class Observations:
         if value_key not in self.values:
             timestamps = [to_datetime(x['timestamp']) for x in self.observations if x[value_key]['value'] is not None]
             values = [x[value_key]['value'] for x in self.observations if x[value_key]['value'] is not None]
-            self.values[value_key] = {'timestamps': timestamps, 'values': values}
+            self.values[value_key] = {'timestamps': timestamps, 'values': values, 'unit_code': self.observations[0][value_key]['unitCode'].strip('unit:')}
         return self.values[value_key]
