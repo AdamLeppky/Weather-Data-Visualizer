@@ -1,6 +1,10 @@
 
 import tkinter as tk
 from Observations import VALUE_KEYS
+import Observations
+import stringcase
+import matplotlib.pyplot as plt
+from matplotlib.pyplot import figure
 
 BACKGROUND_COLOR = '#e6e6e6'  # light gray
 BUTTON_FONT = ('Serif', 16)
@@ -61,13 +65,13 @@ class MainWindow(tk.Frame):
 
         self.graph_var = tk.IntVar()
         self.status_var = tk.StringVar(value='')
-        self.postal_code_var = tk.StringVar(value='')
+        self.postal_code_var = tk.StringVar(value='68516')
         self.postal_code_var.trace("w", lambda name, index, mode, sv=self.postal_code_var: self.input_updated())
-        self.country_code_var = tk.StringVar(value='')
+        self.country_code_var = tk.StringVar(value='US')
         self.country_code_var.trace("w", lambda name, index, mode, sv=self.country_code_var: self.input_updated())
-        self.start_var = tk.StringVar(value='')
+        self.start_var = tk.StringVar(value='2020-10-10')
         self.start_var.trace("w", lambda name, index, mode, sv=self.start_var: self.input_updated())
-        self.end_var = tk.StringVar(value='')
+        self.end_var = tk.StringVar(value='2020-10-20')
         self.end_var.trace("w", lambda name, index, mode, sv=self.end_var: self.input_updated())
 
         # Title
@@ -120,30 +124,52 @@ class MainWindow(tk.Frame):
         subplots = self.option_buttons[0].get_boolean()
         grid = self.option_buttons[1].get_boolean()
 
-        self.check_filled(selected_metrics)
-        print(postal_code, country_code, start, end)
-        print(selected_metrics, graph_type, subplots, grid)
+        if self.all_filled(selected_metrics):
+            try:
+                observations = Observations.Observations(postal_code, country_code, start, end)
+                figure(num=None, figsize=(18, 6), dpi=80, facecolor='w', edgecolor='k')
+                vs_titles = ''
+                for metric in selected_metrics:
+                    title = stringcase.titlecase(metric)
+                    metric_values = observations.get_values_by_key(metric)
+                    label = title + ' ' + metric_values['unit_code']
+                    plt.plot(metric_values['timestamps'], metric_values['values'], label=label)
 
-    def check_filled(self, selected_metrics):
+                    if vs_titles == '':
+                        vs_titles += title
+                    else:
+                        vs_titles += ' vs. ' + title
+
+                plt.xlabel("Date")
+                plt.ylabel("Value")
+                plt.title(f"{vs_titles}\n{postal_code}, {country_code}\nFrom {start} to {end}")
+                plt.legend()
+                plt.show()
+                self.update_status('Graph Successfully Created!', 'green')
+
+            except Exception:
+                self.update_status('Invalid information.')
+
+    def all_filled(self, selected_metrics):
         if self.postal_code_var.get() == '':
-            self.display_error('Please input a postal code.')
+            self.update_status('Please input a postal code.')
+            return False
         elif self.country_code_var.get() == '':
-            self.display_error('Please input a country code.')
+            self.update_status('Please input a country code.')
+            return False
         elif self.start_var.get() == '':
-            self.display_error('Please input a start date.')
+            self.update_status('Please input a start date.')
+            return False
         elif self.end_var.get() == '':
-            self.display_error('Please input an end date.')
+            self.update_status('Please input an end date.')
+            return False
         elif not selected_metrics:
-            self.display_error('Please select at least one metric.')
-        else:
-            self.display_success('Graph Successfully Created!')
+            self.update_status('Please select at least one metric.')
+            return False
+        return True
 
-    def display_error(self, message):
-        self.status_label.config(fg="red")
-        self.status_var.set(message)
-
-    def display_success(self, message):
-        self.status_label.config(fg="green")
+    def update_status(self, message, color='red'):
+        self.status_label.config(fg=color)
         self.status_var.set(message)
 
     def input_updated(self):
