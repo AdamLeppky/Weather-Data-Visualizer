@@ -18,8 +18,8 @@ class CustomButton:
 
 
 class OptionButton(CustomButton):
-    def __init__(self, root, name, row):
-        super().__init__(root, name, row)
+    def __init__(self, root, name_label, row):
+        super().__init__(root, name_label, row)
         self.check_var = tk.IntVar()
         self.boolean = False
         self.button = tk.Checkbutton(self.root, text=self.name, variable=self.check_var, bg=BACKGROUND_COLOR, font=BUTTON_FONT, command=self.get_boolean)
@@ -30,17 +30,19 @@ class OptionButton(CustomButton):
 
 
 class GraphRadioButton(CustomButton):
-    def __init__(self, root, name, name_label, row, var, value):
-        super().__init__(root, name, row)
-        self.button = tk.Radiobutton(self.root, text=name_label, variable=var, value=value, bg=BACKGROUND_COLOR, font=BUTTON_FONT)
+    def __init__(self, root, graph_label, graph_type, row, var, value):
+        super().__init__(root, graph_label, row)
+        self.graph_type = graph_type
+        self.button = tk.Radiobutton(self.root, text=graph_label, variable=var, value=value, bg=BACKGROUND_COLOR, font=BUTTON_FONT)
         self.button.grid(row=self.row, column=1, pady=5, padx=15, sticky='w')
 
 
 class MetricsRadioButton(CustomButton):
-    def __init__(self, root, name, row):
-        super().__init__(root, name, row)
+    def __init__(self, root, metric_label, metric_type, row):
+        super().__init__(root, metric_label, row)
+        self.metric_type = metric_type
         self.check_var = tk.IntVar()
-        self.button = tk.Checkbutton(self.root, text=self.name_label, variable=self.check_var, state='normal', bg=BACKGROUND_COLOR, font=BUTTON_FONT)
+        self.button = tk.Checkbutton(self.root, text=metric_label, variable=self.check_var, state='normal', bg=BACKGROUND_COLOR, font=BUTTON_FONT)
         self.button.grid(row=self.row, column=0, pady=5, padx=15, sticky='w')
 
 
@@ -65,10 +67,10 @@ class MainWindow(tk.Frame):
             tk.Label(self.master, text=label, font=('Serif', 13), bg=BACKGROUND_COLOR).grid(column=headers.index(label), row=1, padx=15, pady=5, sticky='w')
 
         # Metrics
-        self.metric_buttons = [MetricsRadioButton(self.master, x, VALUE_KEYS['labels'].index(x) + 2) for x in VALUE_KEYS['labels']]
+        self.metric_buttons = [MetricsRadioButton(self.master, VALUE_KEYS['labels'][i], VALUE_KEYS['types'][i], i + 2) for i in range(0, len(VALUE_KEYS['labels']))]
 
         # Graph Type Buttons
-        self.graph_buttons = [GraphRadioButton(self.master, GRAPHS['types'][i], GRAPHS['labels'][i], i + 2, self.graph_var, i) for i in range(0, len(GRAPHS['types']))]
+        self.graph_buttons = [GraphRadioButton(self.master, GRAPHS['labels'][i], GRAPHS['types'][i], i + 2, self.graph_var, i) for i in range(0, len(GRAPHS['types']))]
 
         # Options Buttons
         self.option_buttons = [OptionButton(self.master, option,  OPTIONS.index(option) + 2) for option in OPTIONS]
@@ -84,7 +86,7 @@ class MainWindow(tk.Frame):
                  bg=BACKGROUND_COLOR).grid(row=len(VALUE_KEYS['types']) + 5, column=0, columnspan=3, pady=15)
 
     def generate_pressed(self):
-        selected_metrics = [metric.name for metric in self.metric_buttons if metric.check_var.get() == 1]
+        selected_metrics = [metric.metric_type for metric in self.metric_buttons if metric.check_var.get() == 1]
         graph_type = GRAPHS['types'][self.graph_var.get()]
         subplots = self.option_buttons[0].get_boolean()
         grid = self.option_buttons[1].get_boolean()

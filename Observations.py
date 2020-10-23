@@ -6,7 +6,6 @@ from preconditions import preconditions
 
 VALUE_KEYS = {'types': ['windSpeed', 'temperature', 'precipitationLast6Hours', 'relativeHumidity', 'windDirection', 'seaLevelPressure', 'precipitationLastHour', 'dewpoint', 'windGust', 'maxTemperatureLast24Hours', 'windChill', 'barometricPressure', 'elevation', 'precipitationLast3Hours', 'visibility', 'heatIndex'],
               'labels': ['Wind Speed', 'Temperature', 'Precipitation Last 6 Hours', 'Relative Humidity', 'Wind Direction', 'Sea Level Pressure', 'Precipitation Last Hour', 'Dew Point', 'Wind Gust', 'Max Temperature Last 24 Hours', 'Wind Chill', 'Barometric Pressure', 'Elevation', 'Precipitation Last 3 Hours', 'Visibility', 'Heat Index']}
-# VALUE_KEYS_LABEL = [stringcase.titlecase(x) for x in VALUE_KEYS]
 
 
 def to_datetime(timestamp):
