@@ -8,9 +8,9 @@ from matplotlib.pyplot import figure
 
 BACKGROUND_COLOR = '#e6e6e6'  # light gray
 BUTTON_FONT = ('Serif', 16)
-GRAPHS = {'types': ['line', 'bar', 'barh', 'box', 'scatter', 'hist', 'density', 'area'],
-          'labels': ['Line', 'Bar', 'Bar Horizontal', 'Box and Whisker', 'Scatter', 'Histogram', 'Density', 'Area']}
-OPTIONS = ['Subplots', 'Grid']
+GRAPHS = {'types': ['bar', 'barh', 'line', 'scatter'],
+          'labels': ['Bar', 'Bar Horizontal', 'Line', 'Scatter']}
+OPTIONS = ['Grid']
 
 
 class CustomButton:
@@ -113,6 +113,36 @@ class MainWindow(tk.Frame):
         tk.Label(self.master, text="Created by Adam Leppky for METR100 Assignment 2", font=('Serif', 10),
                  bg=BACKGROUND_COLOR).grid(row=len(VALUE_KEYS['types']) + 5, column=0, columnspan=4, pady=15)
 
+    def generate_graph(self, postal_code, country_code, start, end, selected_metrics, graph_type, grid):
+        observations = Observations.Observations(postal_code, country_code, start, end)
+        figure(num=None, figsize=(18, 6), dpi=80, facecolor='w', edgecolor='k')
+        vs_titles = ''
+        for metric in selected_metrics:
+            title = stringcase.titlecase(metric)
+            metric_values = observations.get_values_by_key(metric)
+            label = title + ' ' + metric_values['unit_code']
+            if graph_type == 'bar':
+                plt.bar(metric_values['timestamps'], metric_values['values'], label=label)
+            elif graph_type == 'barh':
+                plt.barh(metric_values['timestamps'], metric_values['values'], label=label)
+            elif graph_type == 'scatter':
+                plt.scatter(metric_values['timestamps'], metric_values['values'], label=label)
+            else:
+                plt.plot(metric_values['timestamps'], metric_values['values'], label=label)
+
+            if vs_titles == '':
+                vs_titles += title
+            else:
+                vs_titles += ' vs. ' + title
+
+        plt.xlabel("Date")
+        plt.ylabel("Value")
+        plt.title(f"{vs_titles}\n{postal_code}, {country_code}\nFrom {start} to {end}")
+        plt.legend()
+        plt.grid(grid)
+        plt.show()
+        self.update_status('Graph Successfully Created!', 'green')
+
     def generate_pressed(self):
         postal_code = self.postal_code_var.get()
         country_code = self.country_code_var.get()
@@ -121,32 +151,11 @@ class MainWindow(tk.Frame):
 
         selected_metrics = [metric.metric_type for metric in self.metric_buttons if metric.check_var.get() == 1]
         graph_type = GRAPHS['types'][self.graph_var.get()]
-        subplots = self.option_buttons[0].get_boolean()
-        grid = self.option_buttons[1].get_boolean()
+        grid = self.option_buttons[0].get_boolean()
 
         if self.all_filled(selected_metrics):
             try:
-                observations = Observations.Observations(postal_code, country_code, start, end)
-                figure(num=None, figsize=(18, 6), dpi=80, facecolor='w', edgecolor='k')
-                vs_titles = ''
-                for metric in selected_metrics:
-                    title = stringcase.titlecase(metric)
-                    metric_values = observations.get_values_by_key(metric)
-                    label = title + ' ' + metric_values['unit_code']
-                    plt.plot(metric_values['timestamps'], metric_values['values'], label=label)
-
-                    if vs_titles == '':
-                        vs_titles += title
-                    else:
-                        vs_titles += ' vs. ' + title
-
-                plt.xlabel("Date")
-                plt.ylabel("Value")
-                plt.title(f"{vs_titles}\n{postal_code}, {country_code}\nFrom {start} to {end}")
-                plt.legend()
-                plt.show()
-                self.update_status('Graph Successfully Created!', 'green')
-
+                self.generate_graph(postal_code, country_code, start, end, selected_metrics, graph_type, grid)
             except Exception:
                 self.update_status('Invalid information.')
 
